@@ -1,0 +1,150 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\UrlHashings;
+use Illuminate\Http\Request;
+
+/**
+ *
+ * APIs for managing URL's hashing
+ */
+class UrlHashController extends Controller
+{
+    /**
+     *  Create tiny URL for the long URL
+     *  @param request Request from the client contains the long URL
+     *  @return json
+     */
+    public function createTinyURL(Request $request)
+    {
+        $requestData = $request->all();
+        if (empty($requestData)) {
+            return json_encode(
+                [
+                    "status" => false,
+                    "error" => "Empty data provided."
+                ]
+            );
+        }
+        $url = trim($requestData['url']);
+        $urlHashModel = new UrlHashings();
+        $validation = $urlHashModel->isURLValid($url);
+        
+        if (!$validation['status']) {
+            return json_encode($validation);
+        }
+
+        $isTinyURLExist = $urlHashModel->isURLAlreadyHashed($url);
+
+        if ($isTinyURLExist) {
+            return json_encode(
+                [
+                    "status" => false,
+                    "error" => "Tiny URL already exist for this URL."
+                ]
+            );
+        }
+
+        $tinyURL = $urlHashModel->getTinyURL($url);
+
+        if (!$tinyURL['status']) {
+            return json_encode(
+                [
+                    "status" => false,
+                    "error" => "Failed to create the tiny URL."
+                ]
+            );
+        }
+
+        return json_encode($tinyURL, JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Get the original(long) URL for the tiny URL
+     * @param request Request from the client contains the long URL
+     * @return json
+     */
+    public function getOriginalURL(Request $request)
+    {
+        $requestData = $request->all();
+        if (empty($requestData)) {
+            return json_encode(
+                [
+                    "status" => false,
+                    "error" => "Empty data provided."
+                ]
+            );
+        }
+        $tinyURL = trim($requestData['url']);
+        $urlHashModel = new UrlHashings();
+        $isTinyURLValid = $urlHashModel->isTinyURLValid($tinyURL);
+
+        if ($isTinyURLValid['status'] == false) {
+            return json_encode($isTinyURLValid);
+        }
+
+        $originalURL = $urlHashModel->getOriginalURL($tinyURL);
+
+        if (empty($originalURL)) {
+            return json_encode(
+                [
+                    "status" => false,
+                    "error" => "Original URL not exist for this tiny URL."
+                ]
+            );
+        }
+        
+        return json_encode(
+            [
+                "status" => true,
+                "url" => $originalURL
+            ],
+            JSON_UNESCAPED_SLASHES
+        );
+    }
+
+    /**
+     * Update the url click count when user clicks the url
+     * @param request Request from the client contains the long URL
+     * @return json
+     */
+    public function updateClickCount(Request $request)
+    {
+        $requestData = $request->all();
+        if (empty($requestData)) {
+            return json_encode(
+                [
+                    "status" => false,
+                    "error" => "Empty data provided."
+                ]
+            );
+        }
+        $url = $requestData['url'];
+        $url = trim($url);
+        $urlHashModel = new UrlHashings();
+        $validationResult = $urlHashModel->isURLValid($url);
+        
+        if (!$validationResult['status']) {
+            return json_encode($validationResult);
+        }
+
+        $updateStatus = $urlHashModel->updateClickCount($url);
+
+        if ($updateStatus) {
+            return json_encode(
+                [
+                    "status" => true,
+                    "message" => "Successfully updated the click count."
+                ]
+            );
+        }
+
+        return json_encode(
+            [
+                "status" => true,
+                "message" => "Failed to updated the click count."
+            ]
+        );
+    }
+}
