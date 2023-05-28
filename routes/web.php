@@ -13,6 +13,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/createTinyURL', [App\Http\Controllers\UrlHashController::class, 'createTinyURL']);
+Route::get('/getOriginalURL', [App\Http\Controllers\UrlHashController::class, 'getOriginalURL']);
+Route::get('/updateClickCount', [App\Http\Controllers\UrlHashController::class, 'updateClickCount']);
