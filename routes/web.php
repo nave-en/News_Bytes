@@ -16,3 +16,4 @@ use Illuminate\Support\Facades\Route;
 Route::get('/createTinyURL', [App\Http\Controllers\UrlHashController::class, 'createTinyURL']);
 Route::get('/getOriginalURL', [App\Http\Controllers\UrlHashController::class, 'getOriginalURL']);
 Route::get('/updateClickCount', [App\Http\Controllers\UrlHashController::class, 'updateClickCount']);
+Route::get('/redirectOriginalUrl/', [App\Http\Controllers\UrlHashController::class, 'redirectOriginalUrl']);

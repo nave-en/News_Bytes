@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\UrlHashings;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  *
@@ -146,5 +147,37 @@ class UrlHashController extends Controller
                 "message" => "Failed to updated the click count."
             ]
         );
+    }
+    
+    /**
+     * Redirect to the original website
+     * @param String $url
+     * 
+     */
+    public function redirectOriginalUrl(Request $request)
+    {
+        $url = $request->query('name');
+        $url = trim($url);
+        if (empty($url)) {
+            Log::error("Empty URL provided.");
+        }
+        // validate the tiny url
+        $urlHashModel = new urlHashings();
+        $validationStatus = $urlHashModel->isTinyURLValid($url);
+        if ($validationStatus['status'] === false) {
+            Log::error("Invalid URL provided. Error : " . $validationStatus['error']);
+
+            return;
+        }
+        // fetch the original url
+        $originalURL = $urlHashModel->getOriginalURL($url);
+
+        if (empty($originalURL)) {
+            Log::error("Original URL not found for the tiny url. Tiny URL : " . $url);
+            return;
+        }
+
+        // redirect to the original url
+        return redirect($originalURL);
     }
 }
